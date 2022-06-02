@@ -22,13 +22,6 @@ pool.query(`SELECT title FROM properties LIMIT 10;`)
   .catch((err) =>
     console.log("error", err))
 
-
-// pool.query(`SELECT * FROM users;`)
-//   .then((res) =>
-//     console.log(res.rows[0]))
-//   .catch((err) =>
-//     console.log("error", err))
-
 /// Users
 
 
@@ -112,26 +105,6 @@ exports.getAllReservations = getAllReservations;
 /// Properties
 
 
-
-
-// const getAllProperties = (options, limit = 10) => {
-//   return pool
-//     .query(`SELECT properties.*, avg(property_reviews.rating) as average_rating
-//           FROM properties
-//           JOIN property_reviews ON properties.id = property_id
-//           // WHERE city LIKE '%ancouv%'
-//           GROUP BY properties.id
-//           // HAVING avg(property_reviews.rating) >= 4
-//           ORDER BY properties.cost_per_night
-//           LIMIT 10;`, [limit])
-//     .then((result) => {
-//       return result.rows;
-//     })
-//     .catch((err) => {
-//       console.log(err.message);
-//     });
-// };
-
 const getAllProperties = function (options, limit = 10) {
   // 1
   const queryParams = [];
@@ -204,7 +177,6 @@ const getAllProperties = function (options, limit = 10) {
   // 6
   return pool.query(queryString, queryParams).then((res) => res.rows);
 };
-
 exports.getAllProperties = getAllProperties;
 
 
@@ -214,10 +186,49 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function (property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  const queryString =
+    `INSERT INTO properties(
+      owner_id,
+      title,
+      description,
+      thumbnail_photo_url,
+      cover_photo_url,
+      cost_per_night,
+      street,
+      city,
+      province,
+      post_code,
+      country,
+      parking_spaces,
+      number_of_bathrooms,
+      number_of_bedrooms
+    )
+  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+  RETURNING *;`;
+  const values = [
+    property.owner_id,
+    property.title,
+    property.description,
+    property.thumbnail_photo_url,
+    property.cover_photo_url,
+    property.cost_per_night,
+    property.street,
+    property.city,
+    property.province,
+    property.post_code,
+    property.country,
+    property.parking_spaces,
+    property.number_of_bathrooms,
+    property.number_of_bedrooms,
+  ];
+  return pool
+    .query(queryString, values)
+    .then((result) => {
+      return result.rows[0]
+    })
+    .catch((err) => {
+      console.log(err.message)
+    })
 }
 exports.addProperty = addProperty;
 
